@@ -14,6 +14,16 @@
 > По хорошему изменения статуса заказов нужно хранить как 
 > event sourcing но такого требования нет
 
+
+### Запуск 
+> Требуется установленный `docker` и `docker-compose`
+
+1. `cp .env.example .env`
+2. `make run_prod`
+3. `make upgrade`
+
+Приложение будет доступно на http://localhost:8080, а swagger по http://localhost:8080/docs
+
 ### Структура
 ```
 .
@@ -124,9 +134,3 @@
 │   └── __init__.py
 └── uv.lock
 ```
-
-
-### Запуск
-
-Енвы из .env.example подойдут для тестового запуска
-`make run_prod` затем после запуска `make upgrade`
