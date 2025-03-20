@@ -1,0 +1,67 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orders_app
+    ports:
+      - "${APP_PORT}:8123"
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - .:/src
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: celery_worker
+    command: celery -A src.core.celery_app worker --loglevel=info
+    depends_on:
+      - web
+      - rabbitmq
+    env_file:
+      - .env
+    volumes:
+      - .:/src
+
+  postgres:
+    image: postgres:17.4
+    container_name: postgres_db
+    hostname: postgres
+    ports:
+      - "${PG_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}" ]
+      interval: 2s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - .env
+
+  redis:
+    image: redis:7.4.2-alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:4.0.7
+    container_name: rabbitmq_broker
+    hostname: rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  postgres_data:
